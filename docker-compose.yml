@@ -1,0 +1,83 @@
+version: '3'
+services:
+  redis:
+    image: "redis:alpine"
+    ports:
+     - "6379:6379"
+  mongo:
+    image: "mongo:3.6"
+    ports:
+     - "27017:27017"
+  refmockserver:
+    image: ob/reference-mock-server
+    ports:
+     - "8001:8001"
+    environment:
+     - "ACCESS_TOKEN=2YotnFZFEjr1zCsicMWpAA"
+     - "ACCOUNT_SWAGGER=https://raw.githubusercontent.com/OpenBankingUK/account-info-api-spec/ee715e094a59b37aeec46aef278f528f5d89eb03/dist/v1.1/account-info-swagger.json"
+     - "AUTHORISATION_CODE=spoofAuthorisationCode"
+     - "BANK_DATA_DIRECTORY=abcbank"
+     - "CLIENT_ID=spoofClientId"
+     - "CLIENT_SECRET=spoofClientSecret"
+     - "DEBUG=error,log"
+     - "HOST=http://refmockserver:8001"
+     - "OPENID_ASPSP_AUTH_HOST=http://${ASPSP_AUTH_HOST_IP}:8001"
+     - "OPENID_ASPSP_TOKEN_HOST=http://refmockserver:8001"
+     - "OPENID_CONFIG_ENDPOINT_URL=http://refmockserver:8001/openid/config"
+     - "PAYMENT_SWAGGER=https://raw.githubusercontent.com/OpenBankingUK/payment-initiation-api-spec/96307a92e70e209e51710fab54164f6e8d2e61cf/dist/v1.1/payment-initiation-swagger.json"
+     - "PORT=8001"
+     - "USER_DATA_DIRECTORY=alice"
+     - "VERSION=v1.1"
+    command: >
+      /bin/bash -c "
+        rm -fr .env
+        echo Start the Reference Mock Service
+        DEBUG=debug,log,error npm run foreman
+        "
+  tpp-server:
+    build: .
+    image: ob/tpp-server
+    ports:
+     - "8003:8003"
+    environment:
+     - "CLIENT_SCOPES='ASPSPReadAccess TPPReadAccess AuthoritiesReadAccess'"
+     - "DEBUG=error,log,debug"
+     - "MONGODB_URI=mongodb://mongo:27017/sample-tpp-server"
+     - "MTLS_ENABLED=false"
+     - "OB_DIRECTORY_AUTH_HOST=http://refmockserver:8001"
+     - "OB_DIRECTORY_HOST=http://refmockserver:8001"
+     - "OB_ISSUING_CA=''"
+     - "OB_PROVISIONED=false"
+     - "PORT=8003"
+     - "REDIS_HOST=redis"
+     - "REDIS_PORT=6379"
+     - "SIGNING_KEY=''"
+     - "SIGNING_KID=XXXXXX-XXXXxxxXxXXXxxx_xxxx"
+     - "SOFTWARE_STATEMENT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+     - "SOFTWARE_STATEMENT_REDIRECT_URL=http://localhost:8080/tpp/authorized"
+     - "TRANSPORT_CERT=''"
+     - "TRANSPORT_KEY=''"
+    links:
+     - redis
+     - mongo
+     - refmockserver
+    depends_on:
+     - redis
+     - mongo
+     - refmockserver
+    command: >
+      /bin/bash -c "
+        while ! nc -z redis 6379 ; do echo Watining for Redis; sleep 1; done
+        echo Redis is UP
+        while ! nc -z mongo 27017 ; do echo Watining for Mongo; sleep 1; done
+        echo Mongo is UP
+        while ! nc -z refmockserver 8001 ; do echo watining for Mock Server; sleep 1; done
+        echo Mock Server is UP
+        echo Initialise list of ASPSPs
+        npm run updateAuthServersAndOpenIds
+        npm run saveCreds authServerId=aaaj4NmBD8lQxmLh2O clientId=spoofClientId clientSecret=spoofClientSecret
+        npm run saveCreds authServerId=bbbX7tUB4fPIYB0k1m clientId=spoofClientId clientSecret=spoofClientSecret
+        npm run saveCreds authServerId=cccbN8iAsMh74sOXhk clientId=spoofClientId clientSecret=spoofClientSecret
+        echo Start the TPP Reference Service
+        DEBUG=debug,log,error npm run foreman
+        "

@@ -1,0 +1,63 @@
+{
+  "name": "tpp-reference-server",
+  "version": "0.7.0",
+  "description": "Reference TPP application API server",
+  "author": "Open Banking Limited",
+  "main": "index.js",
+  "engines": {
+    "node": "8.4.0"
+  },
+  "dependencies": {
+    "axios": "^0.16.2",
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "debug": "^3.1.0",
+    "dotenv": "4.0.0",
+    "env-var": "3.0.2",
+    "express": "^4.15.5",
+    "express-http-proxy": "^1.0.7",
+    "jws": "^3.1.4",
+    "monk": "^6.0.5",
+    "morgan": "^1.9.0",
+    "njwt": "0.4.0",
+    "node-jose": "^0.11.0",
+    "qs": "6.5.1",
+    "redis": "^2.8.0",
+    "superagent": "^3.8.0",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.7.2",
+    "eslint-config-airbnb-base": "^12.0.1",
+    "eslint-plugin-import": "^2.7.0",
+    "foreman": "^2.0.0",
+    "mocha": "^3.5.3",
+    "nock": "^9.0.22",
+    "node-mocks-http": "1.6.6",
+    "proxyquire": "^1.8.0",
+    "sinon": "^4.0.0",
+    "supertest": "^3.0.0"
+  },
+  "scripts": {
+    "foreman": "./node_modules/foreman/nf.js start",
+    "start": "node index.js",
+    "test": "NODE_ENV=test MONGODB_URI='localhost:27017/test-tpp-server' mocha --recursive",
+    "test:watch": "NODE_ENV=test MONGODB_URI='localhost:27017/test-tpp-server' mocha --recursive --watch",
+    "test:debug": "NODE_ENV=test MONGODB_URI='localhost:27017/test-tpp-server' node --inspect-brk node_modules/mocha/bin/_mocha --recursive --watch --no-timeouts",
+    "eslint": "node ./node_modules/eslint/bin/eslint.js .",
+    "checks": "node ./node_modules/eslint/bin/eslint.js . && mocha",
+    "listAuthServers": "node ./scripts/list-auth-servers.js",
+    "saveCreds": "node ./scripts/add-client-credentials.js",
+    "updateAuthServersAndOpenIds": "node ./scripts/update-auth-server-and-open-id-configs",
+    "base64-cert-or-key": "node ./scripts/base64-encode-cert-or-key"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenBankingUK/sample-tpp-server.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OpenBankingUK/sample-tpp-server/issues"
+  },
+  "homepage": "https://github.com/OpenBankingUK/sample-tpp-server#readme"
+}
